@@ -1,31 +1,79 @@
 var quake_json = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geojson'
-// Create our initial map object
-// Set the longitude, latitude, and the starting zoom level
+
+var tile = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", 
+                        {
+  tileSize: 512,
+  maxZoom: 10,
+  zoomOffset: -1,
+  id: "mapbox/streets-v11",
+  accessToken: API_KEY
+});
+
 var myMap = L.map("map", {
-    center: [45.52, -122.67],
-    zoom: 13
-  });
+  center: [
+    8.059230, -27.374223
+  ],
+  zoom: 2
+
+});
+
+tile.addTo(myMap);
+
+
+
+d3.json(quake_json).then(function(data) {
+    
+    function markerSize(magnitude) {
+        return magnitude;
+      }
+
+  function markerColor(depth) {
+    switch (true) {
+      case depth > 80:
+        return "green";
+      case depth > 40:
+        return "yellow";
+      case depth > 20:
+        return "orange";
+      case depth > 10:
+        return "orangered";
+      case depth > 5:
+        return "red";
+      default:
+        return "white";
+    }
+  }
+
+
   
-  // Add a tile layer (the background map image) to our map
-  // We use the addTo method to add objects to our map
-  var tilelayer=L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
-    attribution: "© <a href='https://www.mapbox.com/about/maps/'>Mapbox</a> © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> <strong><a href='https://www.mapbox.com/map-feedback/' target='_blank'>Improve this map</a></strong>",
-    tileSize: 512,
-    maxZoom: 18,
-    zoomOffset: -1,
-    id: "mapbox/streets-v11",
-    accessToken: API_KEY
-  })
-  
-  tilelayer.addTo(myMap);
-  
-  // Create a new marker
-  // Pass in some initial options, and then add it to the map using the addTo method
-  var marker = L.marker([45.52, -122.67], {
-    draggable: true,
-    title: "My First Marker"
+
+  function attributes(feature) {
+    return {
+      opacity: 0.75,
+      fillOpacity: 0.75,
+      fillColor: markerColor(feature.geometry.coordinates[2]),
+      color: "black",
+      radius: markerSize(feature.properties.mag),
+      stroke: true,
+      weight: 0.5
+    };
+  }
+
+
+  L.geoJson(data, {
+
+    pointToLayer: function(feature, latlng) {
+      return L.circleMarker(latlng);
+    },
+
+    style: attributes,
+
+    onEachFeature: function(feature, layer) {
+      layer.bindPopup("Magnitude: " + feature.properties.mag 
+                    + "<br>Depth: " + feature.geometry.coordinates[2]
+                    + "<br>Location: " + feature.properties.place);
+
+    }
   }).addTo(myMap);
   
-  // Binding a pop-up to our marker
-  marker.bindPopup("Hello There!");
-  
+});
