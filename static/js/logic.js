@@ -29,15 +29,17 @@ d3.json(quake_json).then(function(data) {
 
   function markerColor(depth) {
     switch (true) {
-      case depth > 80:
+        case depth > 80:
         return "green";
-      case depth > 40:
-        return "yellow";
+    case depth > 40:
+        return "lightgreen";
       case depth > 20:
-        return "orange";
+        return "yellow";
       case depth > 10:
-        return "orangered";
+        return "orange";
       case depth > 5:
+        return "orangered";
+      case depth > 0:
         return "red";
       default:
         return "white";
@@ -76,4 +78,22 @@ d3.json(quake_json).then(function(data) {
     }
   }).addTo(myMap);
   
+  var legend = L.control({position: "bottomright"});
+  legend.onAdd = function() {
+    var div = L.DomUtil.create("div", "info legend"),
+    depth = [0, 5, 10, 20, 40, 80];
+
+    div.innerHTML += "<h3 style='text-align: center'>Depth</h3>"
+
+    for (var i =0; i < depth.length; i++) {
+      div.innerHTML +=
+      '<div style="background:' + markerColor(depth[i] + 1) + '"></i> ' +
+          depth[i] + (depth[i + 1] ? '&ndash;' + depth[i + 1] + '<br>' : '+');
+      }
+      return div;
+    };
+    legend.addTo(myMap);
+
+
 });
+
